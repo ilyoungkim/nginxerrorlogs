@@ -1,7 +1,7 @@
 # 🕹️ NGINX Log Analyzer - Retro Arcade Style
 
 [![Version](https://img.shields.io/badge/version-1.5-brightgreen.svg)](https://github.com/weblogsarcade/nginx-log-analyzer)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![PayPal](https://img.shields.io/badge/PayPal-Secure%20Payment-0070ba.svg)](https://paypal.com)
 [![AI](https://img.shields.io/badge/AI-Powered-ff6b35.svg)](https://github.com/weblogsarcade/nginx-log-analyzer)
 
@@ -247,7 +247,7 @@ Our interface combines professional functionality with nostalgic gaming elements
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
