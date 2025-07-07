@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>AI Nginx Error Analysis Report</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="AI-based Nginx error log analysis and visualization report. Provides error distribution, client statistics, and GPT-based solutions.">
+        <meta name="author" content="Weblogs Co. Ltd.">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="robots" content="noindex, nofollow">
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script async
+          data-api-host="https://cdn.growthbook.io"
+          data-client-key="sdk-ohhWMg5EpqvQg2wa"
+          src="https://cdn.jsdelivr.net/npm/@growthbook/growthbook/dist/bundles/auto.min.js"
+        ></script>
+        <style>
+            /* Google Material Design inspired style */
+            body {
+                font-family: 'Roboto', 'Noto Sans KR', Arial, sans-serif;
+                background: #f5f5f5;
+                color: #212121;
+                margin: 0;
+                padding: 0;
+            }
+            h1, h2, h3 {
+                font-weight: 500;
+                color: #2196f3;
+                margin-top: 32px;
+                margin-bottom: 16px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-top: 40px;
+            }
+            h2 {
+                font-size: 1.5rem;
+                border-bottom: 2px solid #2196f3;
+                padding-bottom: 4px;
+            }
+            h3 {
+                font-size: 1.2rem;
+                color: #1976d2;
+            }
+            p {
+                font-size: 1rem;
+                margin: 8px 0;
+            }
+            .card {
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(33,150,243,0.08), 0 1.5px 4px rgba(0,0,0,0.06);
+                margin: 24px auto;
+                padding: 24px;
+                max-width: 1200px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background: #fff;
+                margin: 16px 0 32px 0;
+                border-radius: 8px;
+                box-shadow: 0 1px 4px rgba(33,150,243,0.08), 0 1px 2px rgba(0,0,0,0.04);
+                overflow: hidden;
+            }
+            th, td {
+                padding: 10px 8px;
+                border-bottom: 1px solid #e0e0e0;
+                text-align: left;
+                font-size: 0.98rem;
+            }
+            th {
+                background: #e3f2fd;
+                color: #1976d2;
+                font-weight: 500;
+                border-bottom: 2px solid #90caf9;
+            }
+            tr:last-child td {
+                border-bottom: none;
+            }
+            tr:hover {
+                background: #f1f8ff;
+            }
+            td.request-col {
+                max-width: 300px;
+                white-space: pre-line;
+                overflow-x: auto;
+            }
+            #map-chart, #chart1, #chart2 {
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 1px 4px rgba(33,150,243,0.08), 0 1px 2px rgba(0,0,0,0.04);
+                margin: 24px auto;
+                padding: 8px;
+                max-width: 100%;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            #map-chart, #chart1, #chart2 {
+                max-width: 1200px;
+            }
+            #map-chart { width: 100%; height: 60vh; min-height: 400px; }
+            #chart1, #chart2 { width: 100%; min-height: 400px; }
+            a {
+                color: #1976d2;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            a:hover {
+                color: #0d47a1;
+                text-decoration: underline;
+            }
+            .ssl-small-cell { }
+            footer {
+                margin: 40px 0 0 0;
+                padding: 24px 0 0 0;
+                text-align: center;
+                color: #757575;
+                font-size: 0.95rem;
+                border-top: 1px solid #e0e0e0;
+                background: #fafafa;
+            }
+            /* Material style for code blocks */
+            code, pre {
+                background: #eceff1;
+                color: #263238;
+                border-radius: 4px;
+                padding: 2px 6px;
+                font-size: 0.97em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+        <h1>AI Nginx Error Analysis Report</h1>
+        <p>Generated at: 2025-07-07 09:23:55</p>
+        <p>Log Start: 2025-06-16 03:39:14</p>
+        <p>Log End: 2025-06-17 01:28:50</p>
+        <p>Log File: output/error.log-20250617.dd9a2dbd-2112-4f15-96d9-0ca7eabbe129.html</p>
+        </div>
+        <div class="card">
+        <h2>Error Distribution</h2>
+        <div id="chart1"></div>
+        </div>
+        <div class="card">
+        <h2>Log Level Timeline</h2>
+        <div id="chart2"></div>
+        </div>
+        <div class="card">
+        <h2>Geographical Distribution of Clients</h2>
+        <div id="map-chart"></div>
+        </div>
+        <div class="card">
+        <h2>Top Error Types</h2>
+        <input type="text" id="top-error-search" placeholder="Search Error Type, Client, Message..." style="margin-bottom:12px;width:320px;padding:8px 12px;border:1px solid #90caf9;border-radius:4px;font-size:1rem;">
+        <table id="top-error-table">
+            <tr>
+                <th>Error Type</th>
+                <th>Count</th>
+                <th>Top Client</th>
+                <th>Error Message</th>
+            </tr>
+            
+            <tr>
+                <td>error:Access Forbidden</td>
+                <td>168</td>
+                <td>117.48.157.75</td>
+                <td>Access Forbidden</td>
+            </tr>
+            
+            <tr>
+                <td>error:SSL Certificate Error</td>
+                <td>60</td>
+                <td>N/A</td>
+                <td>SSL Certificate Error</td>
+            </tr>
+            
+            <tr>
+                <td>warn:Upstream Response Buffered</td>
+                <td>6</td>
+                <td>13.124.59.143</td>
+                <td>Upstream Response Buffered</td>
+            </tr>
+            
+        </table>
+        </div>
+        <div class="card">
+        <h2>Client IP Statistics</h2>
+        <input type="text" id="client-ip-search" placeholder="Search Client IP, Host, Country..." style="margin-bottom:12px;width:320px;padding:8px 12px;border:1px solid #90caf9;border-radius:4px;font-size:1rem;">
+        <table id="client-ip-table">
+            <tr>
+                <th>Client IP</th>
+                <th>Occurrences</th>
+                <th>Resolved Address</th>
+                <th>Country</th>
+            </tr>
+            
+            <tr>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>86</td>
+                <td>Unknown</td>
+                <td>China</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>12</td>
+                <td>Unknown</td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>12</td>
+                <td><a href="https://hat.census.shodan.io" target="_blank">hat.census.shodan.io</a></td>
+                <td>Canada</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>10</td>
+                <td><a href="https://host-81-29-134-51.iqdata.center" target="_blank">host-81-29-134-51.iqdata.center</a></td>
+                <td>Russia</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>6</td>
+                <td>Unknown</td>
+                <td>Singapore</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://13.124.59.143" target="_blank">13.124.59.143</a></td>
+                <td>6</td>
+                <td><a href="https://ec2-13-124-59-143.ap-northeast-2.compute.amazonaws.com" target="_blank">ec2-13-124-59-143.ap-northeast-2.compute.amazonaws.com</a></td>
+                <td>South Korea</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://196.251.117.9" target="_blank">196.251.117.9</a></td>
+                <td>4</td>
+                <td>Unknown</td>
+                <td>The Netherlands</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://164.92.181.126" target="_blank">164.92.181.126</a></td>
+                <td>4</td>
+                <td>Unknown</td>
+                <td>Germany</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://43.166.136.202" target="_blank">43.166.136.202</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://147.185.133.248" target="_blank">147.185.133.248</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://64.225.122.232" target="_blank">64.225.122.232</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://172.236.228.197" target="_blank">172.236.228.197</a></td>
+                <td>2</td>
+                <td><a href="https://172-236-228-197.ip.linodeusercontent.com" target="_blank">172-236-228-197.ip.linodeusercontent.com</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://196.251.70.76" target="_blank">196.251.70.76</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>Seychelles</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://43.166.7.113" target="_blank">43.166.7.113</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>South Korea</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://3.132.23.201" target="_blank">3.132.23.201</a></td>
+                <td>2</td>
+                <td><a href="https://scan.cypex.ai" target="_blank">scan.cypex.ai</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://34.229.150.114" target="_blank">34.229.150.114</a></td>
+                <td>2</td>
+                <td><a href="https://ec2-34-229-150-114.compute-1.amazonaws.com" target="_blank">ec2-34-229-150-114.compute-1.amazonaws.com</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://207.154.194.32" target="_blank">207.154.194.32</a></td>
+                <td>2</td>
+                <td>Unknown</td>
+                <td>Germany</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://104.155.71.139" target="_blank">104.155.71.139</a></td>
+                <td>2</td>
+                <td><a href="https://139.71.155.104.bc.googleusercontent.com" target="_blank">139.71.155.104.bc.googleusercontent.com</a></td>
+                <td>Belgium</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://64.62.156.197" target="_blank">64.62.156.197</a></td>
+                <td>2</td>
+                <td><a href="https://scan-87-5.shadowserver.org" target="_blank">scan-87-5.shadowserver.org</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://35.203.211.146" target="_blank">35.203.211.146</a></td>
+                <td>2</td>
+                <td><a href="https://146.211.203.35.bc.googleusercontent.com" target="_blank">146.211.203.35.bc.googleusercontent.com</a></td>
+                <td>United Kingdom</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://164.90.176.33" target="_blank">164.90.176.33</a></td>
+                <td>2</td>
+                <td><a href="https://server.am-groupet.com" target="_blank">server.am-groupet.com</a></td>
+                <td>Germany</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://64.62.197.22" target="_blank">64.62.197.22</a></td>
+                <td>2</td>
+                <td><a href="https://scan-44f.shadowserver.org" target="_blank">scan-44f.shadowserver.org</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://64.62.197.26" target="_blank">64.62.197.26</a></td>
+                <td>2</td>
+                <td><a href="https://scan-44j.shadowserver.org" target="_blank">scan-44j.shadowserver.org</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://107.174.224.18" target="_blank">107.174.224.18</a></td>
+                <td>2</td>
+                <td><a href="https://107-174-224-18-host.colocrossing.com" target="_blank">107-174-224-18-host.colocrossing.com</a></td>
+                <td>United States</td>
+            </tr>
+            
+            <tr>
+                <td><a href="https://13.86.104.42" target="_blank">13.86.104.42</a></td>
+                <td>2</td>
+                <td><a href="https://azpdcsqawf52.stretchoid.com" target="_blank">azpdcsqawf52.stretchoid.com</a></td>
+                <td>United States</td>
+            </tr>
+            
+        </table>
+        </div>
+        <div class="card">
+        <h2>Error Details</h2>
+        
+        <h3>error:SSL Certificate Error</h3>
+        <input type="text" class="error-detail-search" data-table-id="error-detail-table-0" placeholder="Search in this error type..." style="margin-bottom:12px;width:320px;padding:8px 12px;border:1px solid #90caf9;border-radius:4px;font-size:1rem;">
+        <table id="error-detail-table-0">
+            
+            <colgroup>
+                <col style="width:16%">
+                <col style="width:16%">
+                <col style="width:8%">
+                <col class="ssl-small-cell" style="width:8%">
+                <col class="request-col ssl-small-cell" style="width:8%">
+                <col class="ssl-small-cell" style="width:6%">
+                <col style="width:38%">
+            </colgroup>
+            
+            <tr>
+                <th>Timestamp</th>
+                <th>Message</th>
+                <th>Client IP</th>
+                <th class="ssl-small-cell">Server</th>
+                <th class="request-col ssl-small-cell">Request</th>
+                <th class="ssl-small-cell">Host</th>
+                <th>Solution</thg>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:14</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td>SSL Certificate Error in the Nginx error log broadly refers to issues Nginx encounters related to the SSL/TLS certificate when establishing a secure connection. This can happen when Nginx is acting as a server (client connecting to Nginx) or as a client (Nginx connecting to an upstream server over HTTPS).
+Detailed Explanation: SSL/TLS certificates are digital documents used to verify the identity of a server and enable encrypted communication. Errors occur when Nginx cannot correctly load, process, or validate a certificate or its associated files (like the private key or certificate chain). The specific error message in the log will provide more detail about the exact nature of the problem. When Nginx is the server, the error is usually logged because a client failed to connect securely due to a problem with Nginx's certificate setup. When Nginx is the client (e.g., using proxy_pass https://...), the error is logged because Nginx failed to connect securely to the upstream due to a problem with the upstream's certificate or Nginx's ability to trust it.
+
+Common Causes (Nginx as Server):
+1. Incorrect File Paths: ssl_certificate or ssl_certificate_key paths are wrong, or files don't exist/are unreadable by the Nginx user.
+2. Certificate/Key Mismatch: The private key doesn't match the public key in the certificate.
+3. Incorrect File Format: Certificate or key files are not in PEM format.
+4. Encrypted Private Key: The private key is password-protected, and Nginx isn't configured to handle it (requires decrypting the key).
+5. Incomplete Chain: Intermediate or root certificates are missing or not correctly included/configured, preventing client verification.
+6. Expired/Invalid Certificate: Certificate validity dates are outside the current range, or the domain name doesn't match.
+7. Corrupt Files: Certificate or key files are damaged.
+
+Common Causes (Nginx as Client, proxy_pass https://...):
+1. Upstream Certificate Invalid: Upstream certificate is expired, self-signed, or invalid.
+2. Missing CA Certificates: Nginx server lacks the necessary trusted CA certificates to verify the upstream's certificate chain.
+3. Hostname Mismatch: The hostname Nginx connects to doesn't match the upstream certificate's subject.
+
+Solution Steps:
+1. Verify Nginx Config Paths & Permissions: Check ssl_certificate and ssl_certificate_key paths. Ensure files exist and Nginx user can read them.
+2. Check File Format: Confirm files are in PEM format (-----BEGIN...-----).
+3. Verify Certificate & Key Match: Use openssl x509 -noout -modulus -in cert.crt | openssl md5 and openssl rsa -noout -modulus -in key.key | openssl md5. Hashes must match.
+4. Decrypt Private Key: If key is encrypted, use openssl rsa -in encrypted.key -out decrypted.key and update Nginx config.
+5. Verify Certificate Chain: Ensure ssl_certificate includes the full chain or ssl_trusted_certificate is used. Use openssl s_client -connect domain:443 -showcerts or online tools.
+6. Check Validity Dates & Domain: Use openssl x509 -noout -dates -in cert.crt and openssl x509 -noout -subject -in cert.crt.
+7. For Nginx as Client: Ensure upstream cert is trusted. Update CA certs on Nginx server OS (ca-certificates package). Use proxy_ssl_server_name on;. Avoid proxy_ssl_verify off; in production.
+8. Check for File Corruption: Try fresh certificate files.
+9. Restart Nginx: sudo systemctl restart nginx.</td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:14</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 04:40:48</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 04:40:48</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:32:45</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:32:45</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:00</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:00</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:58:31</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:58:31</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 08:11:52</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 08:11:52</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 08:31:08</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 08:31:08</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:46:29</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:46:29</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:51:55</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:51:55</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 11:14:46</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 11:14:46</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:31:04</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:31:04</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:51:29</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:51:29</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:11:16</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:11:16</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:38</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:38</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:00:19</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:00:19</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:29:41</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:29:41</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:47</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:47</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:00:54</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:00:54</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:06:50</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:06:50</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:01:44</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:01:44</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:13:27</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:13:27</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:06</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:06</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:40:22</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:40:22</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:28</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:28</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:39:43</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:39:43</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:33:41</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:33:41</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:44:15</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:44:15</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:09:11</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:09:11</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:52:24</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:52:24</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/17 01:28:50</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/17 01:28:50</td>
+                <td>#0: OCSP_basic_verify() failed (SSL: error:27069065:OCSP routines:OCSP_basic_verify:certificate verify error:Verify error:self signed certificate in certificate chain) while requesting certificate status</td>
+                <td>None</td>
+                <td class="ssl-small-cell">None</td>
+                <td class="request-col ssl-small-cell">None</td>
+                <td class="ssl-small-cell">None</td>
+                <td></td>
+            </tr>
+            
+        </table>
+        
+        <h3>error:Access Forbidden</h3>
+        <input type="text" class="error-detail-search" data-table-id="error-detail-table-1" placeholder="Search in this error type..." style="margin-bottom:12px;width:320px;padding:8px 12px;border:1px solid #90caf9;border-radius:4px;font-size:1rem;">
+        <table id="error-detail-table-1">
+            
+            <colgroup>
+                <col style="width:16%">
+                <col style="width:16%">
+                <col style="width:8%">
+                <col style="width:8%">
+                <col class="request-col" style="width:16%">
+                <col style="width:6%">
+                <col style="width:30%">
+            </colgroup>
+            
+            <tr>
+                <th>Timestamp</th>
+                <th>Message</th>
+                <th>Client IP</th>
+                <th>Server</th>
+                <th class="request-col">Request</th>
+                <th>Host</th>
+                <th>Solution</thg>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:14</td>
+                <td>#0: *2059039 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /tHXH HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td>error log means Nginx understood the client's request and located the requested file or resource, but its configuration or underlying system permissions prevent it from serving that resource. Unlike "Permission Denied" which is an OS-level file system permission issue, "Access Forbidden" is often an Nginx configuration issue related to access control.
+Detailed Explanation: When Nginx receives a request, it first determines which server block and then which location block should handle it. Inside the location block, directives like allow, deny, auth_basic, or even certain index configurations can dictate whether a client is permitted to access the resource. If Nginx determines the client is not allowed based on these rules, it returns a 403 Forbidden HTTP status code and logs an "Access Forbidden" error.
+
+Common Causes:
+1. deny Directive: A deny all; or deny [specific_ip]; directive in the relevant location block is explicitly blocking the client's IP address or all access.
+2. allow Directive: An allow [specific_ip]; directive is present, but the client's IP is not in the allowed list, and there's an implicit or explicit deny all; following it.
+3. auth_basic Authentication Failure: The auth_basic directive is configured, but the client failed to provide valid credentials (username/password).
+4. Missing index File: A request is made for a directory (e.g., /my-folder/), but no index file (like index.html, index.php) is found within that directory, and directory listing is disabled (autoindex off;). Nginx will return 403 Forbidden instead of listing the directory contents.
+5. File System Permissions (Can sometimes manifest as Forbidden): While usually "Permission Denied," severe file system permission issues, particularly on directories preventing traversal, can sometimes lead to a 403 Forbidden error, although this is less common than a direct "Permission Denied" for the file itself.
+6. SELinux or AppArmor: Security modules like SELinux or AppArmor can enforce policies that prevent Nginx from accessing files or directories, sometimes resulting in a 403 Forbidden.
+7. Incorrect root or alias: While often leading to "File Not Found," a misconfigured root or alias combined with other directives could potentially result in a forbidden error.
+
+Solution Steps:
+1. Review Nginx Configuration for allow and deny:
+- Open the Nginx configuration file for the site and locate the server and location block handling the request.
+- Look for allow and deny directives. Ensure they are configured as intended and are not accidentally blocking the client's IP address.
+- Remember that deny directives are processed before allow directives within the same level, but the order of blocks matters.
+2. Check auth_basic Configuration: If auth_basic is used, verify that the client is providing the correct username and password. Check the auth_basic_user_file path and contents.
+3. Verify index File Existence and autoindex:
+- If requesting a directory, ensure an index file (as specified in the index directive) exists within that directory.
+- If you want directory listing, ensure autoindex on; is set in the location block. If autoindex off; (the default) and no index file exists, Nginx returns 403.
+4. Check File System Permissions (Less Likely, but possible): Although typically "Permission Denied," double-check that the Nginx user has execute permissions (x) on all directories leading to the requested file. Use namei -om /path/to/resource.
+5. Check SELinux/AppArmor: If using these security modules, check their logs (/var/log/audit/audit.log for SELinux) for denial messages related to Nginx accessing the path. Adjust policies or file contexts (chcon for SELinux) if necessary.
+6. Analyze Access Logs: Check the Nginx access logs (/var/log/nginx/access.log) for the request that received the 403 status code. This confirms the exact URL and client IP involved.
+7. Restart Nginx: sudo systemctl restart nginx after making configuration changes.</td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:14</td>
+                <td>#0: *2059039 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /tHXH HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:15</td>
+                <td>#0: *2059044 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /nqM1 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:15</td>
+                <td>#0: *2059044 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /nqM1 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:19</td>
+                <td>#0: *2059054 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab8 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:19</td>
+                <td>#0: *2059054 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab8 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:21</td>
+                <td>#0: *2059058 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /jquery-3.3.1.slim.min.js HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:21</td>
+                <td>#0: *2059058 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /jquery-3.3.1.slim.min.js HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:23</td>
+                <td>#0: *2059064 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab9 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:23</td>
+                <td>#0: *2059064 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab9 HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:26</td>
+                <td>#0: *2059072 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /jquery-3.3.2.slim.min.js HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 03:39:26</td>
+                <td>#0: *2059072 access forbidden by rule</td>
+                <td><a href="https://148.153.56.84" target="_blank">148.153.56.84</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /jquery-3.3.2.slim.min.js HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 04:40:49</td>
+                <td>#0: *2066441 access forbidden by rule</td>
+                <td><a href="https://43.166.136.202" target="_blank">43.166.136.202</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 04:40:49</td>
+                <td>#0: *2066441 access forbidden by rule</td>
+                <td><a href="https://43.166.136.202" target="_blank">43.166.136.202</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:32:45</td>
+                <td>#0: *2087572 access forbidden by rule</td>
+                <td><a href="https://147.185.133.248" target="_blank">147.185.133.248</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:32:45</td>
+                <td>#0: *2087572 access forbidden by rule</td>
+                <td><a href="https://147.185.133.248" target="_blank">147.185.133.248</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:41:42</td>
+                <td>#0: *2088651 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:41:42</td>
+                <td>#0: *2088651 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:07</td>
+                <td>#0: *2088723 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /robots.txt HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:07</td>
+                <td>#0: *2088723 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /robots.txt HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:09</td>
+                <td>#0: *2088728 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /sitemap.xml HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:09</td>
+                <td>#0: *2088728 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /sitemap.xml HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:10</td>
+                <td>#0: *2088733 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.well-known/security.txt HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:10</td>
+                <td>#0: *2088733 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.well-known/security.txt HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:12</td>
+                <td>#0: *2088738 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:12</td>
+                <td>#0: *2088738 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:14</td>
+                <td>#0: *2088741 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:42:14</td>
+                <td>#0: *2088741 access forbidden by rule</td>
+                <td><a href="https://86.54.31.32" target="_blank">86.54.31.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:58:32</td>
+                <td>#0: *2090699 access forbidden by rule</td>
+                <td><a href="https://64.225.122.232" target="_blank">64.225.122.232</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 07:58:32</td>
+                <td>#0: *2090699 access forbidden by rule</td>
+                <td><a href="https://64.225.122.232" target="_blank">64.225.122.232</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST /hello.world?%ADd+allow_url_include%3d1+%ADd+auto_prepend_file%3dphp://input HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST /hello.world?%ADd+allow_url_include%3d1+%ADd+auto_prepend_file%3dphp://input HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/LICENSE/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:57</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/phpunit/phpunit/LICENSE/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /vendor/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:58</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/phpunit/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /lib/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:41:59</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /ws/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /ws/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /yii/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /yii/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /zend/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /zend/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:00</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /V2/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /V2/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /tests/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /tests/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /test/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /test/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /testing/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /testing/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:01</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /workspace/drupal/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /workspace/drupal/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:02</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /public/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /public/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /apps/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /apps/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /app/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /app/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /public/index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /public/index.php?s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?lang=../../../../../../../../usr/local/lib/php/pearcmd&+config-create+/&/<?echo(md5("hi"));?>+/tmp/index1.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:03</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?lang=../../../../../../../../usr/local/lib/php/pearcmd&+config-create+/&/<?echo(md5("hi"));?>+/tmp/index1.php HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:04</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?lang=../../../../../../../../tmp/index1 HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:04</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /index.php?lang=../../../../../../../../tmp/index1 HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:04</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /containers/json HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:42:04</td>
+                <td>#0: *2112857 access forbidden by rule</td>
+                <td><a href="https://117.48.157.75" target="_blank">117.48.157.75</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /containers/json HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 11:14:46</td>
+                <td>#0: *2117163 access forbidden by rule</td>
+                <td><a href="https://172.236.228.197" target="_blank">172.236.228.197</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 11:14:46</td>
+                <td>#0: *2117163 access forbidden by rule</td>
+                <td><a href="https://172.236.228.197" target="_blank">172.236.228.197</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:35:41</td>
+                <td>#0: *2127704 access forbidden by rule</td>
+                <td><a href="https://196.251.70.76" target="_blank">196.251.70.76</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:35:41</td>
+                <td>#0: *2127704 access forbidden by rule</td>
+                <td><a href="https://196.251.70.76" target="_blank">196.251.70.76</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:51:30</td>
+                <td>#0: *2129657 access forbidden by rule</td>
+                <td><a href="https://43.166.7.113" target="_blank">43.166.7.113</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 12:51:30</td>
+                <td>#0: *2129657 access forbidden by rule</td>
+                <td><a href="https://43.166.7.113" target="_blank">43.166.7.113</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:11:17</td>
+                <td>#0: *2132058 access forbidden by rule</td>
+                <td><a href="https://3.132.23.201" target="_blank">3.132.23.201</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:11:17</td>
+                <td>#0: *2132058 access forbidden by rule</td>
+                <td><a href="https://3.132.23.201" target="_blank">3.132.23.201</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:38</td>
+                <td>#0: *2135442 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:38</td>
+                <td>#0: *2135442 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:42</td>
+                <td>#0: *2135449 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 13:38:42</td>
+                <td>#0: *2135449 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:00:20</td>
+                <td>#0: *2138246 access forbidden by rule</td>
+                <td><a href="https://34.229.150.114" target="_blank">34.229.150.114</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:00:20</td>
+                <td>#0: *2138246 access forbidden by rule</td>
+                <td><a href="https://34.229.150.114" target="_blank">34.229.150.114</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:29:43</td>
+                <td>#0: *2142446 access forbidden by rule</td>
+                <td><a href="https://207.154.194.32" target="_blank">207.154.194.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 14:29:43</td>
+                <td>#0: *2142446 access forbidden by rule</td>
+                <td><a href="https://207.154.194.32" target="_blank">207.154.194.32</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">POST / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:48</td>
+                <td>#0: *2162742 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aaa9 HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:48</td>
+                <td>#0: *2162742 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aaa9 HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:54</td>
+                <td>#0: *2162757 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab8 HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:00:54</td>
+                <td>#0: *2162757 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /aab8 HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:01:06</td>
+                <td>#0: *2162783 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:01:06</td>
+                <td>#0: *2162783 access forbidden by rule</td>
+                <td><a href="https://178.128.95.222" target="_blank">178.128.95.222</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:37:06</td>
+                <td>#0: *2168350 access forbidden by rule</td>
+                <td><a href="https://104.155.71.139" target="_blank">104.155.71.139</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">OPTIONS / HTTP/1.0</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:37:06</td>
+                <td>#0: *2168350 access forbidden by rule</td>
+                <td><a href="https://104.155.71.139" target="_blank">104.155.71.139</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">OPTIONS / HTTP/1.0</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:00:54</td>
+                <td>#0: *2171582 access forbidden by rule</td>
+                <td><a href="https://64.62.156.197" target="_blank">64.62.156.197</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:00:54</td>
+                <td>#0: *2171582 access forbidden by rule</td>
+                <td><a href="https://64.62.156.197" target="_blank">64.62.156.197</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:06:50</td>
+                <td>#0: *2172374 access forbidden by rule</td>
+                <td><a href="https://35.203.211.146" target="_blank">35.203.211.146</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:06:50</td>
+                <td>#0: *2172374 access forbidden by rule</td>
+                <td><a href="https://35.203.211.146" target="_blank">35.203.211.146</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:07</td>
+                <td>#0: *2182444 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:07</td>
+                <td>#0: *2182444 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:09</td>
+                <td>#0: *2182445 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:09</td>
+                <td>#0: *2182445 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:10</td>
+                <td>#0: *2182450 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:28:10</td>
+                <td>#0: *2182450 access forbidden by rule</td>
+                <td><a href="https://81.29.134.51" target="_blank">81.29.134.51</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /favicon.ico HTTP/1.1</td>
+                <td>112.175.152.231:443</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:29:32</td>
+                <td>#0: *2182615 access forbidden by rule</td>
+                <td><a href="https://196.251.117.9" target="_blank">196.251.117.9</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 19:29:32</td>
+                <td>#0: *2182615 access forbidden by rule</td>
+                <td><a href="https://196.251.117.9" target="_blank">196.251.117.9</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:28</td>
+                <td>#0: *2189722 access forbidden by rule</td>
+                <td><a href="https://164.90.176.33" target="_blank">164.90.176.33</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /cgi-bin/authLogin.cgi HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:28</td>
+                <td>#0: *2189722 access forbidden by rule</td>
+                <td><a href="https://164.90.176.33" target="_blank">164.90.176.33</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /cgi-bin/authLogin.cgi HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:29</td>
+                <td>#0: *2189723 access forbidden by rule</td>
+                <td><a href="https://164.92.181.126" target="_blank">164.92.181.126</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /solr/admin/info/system HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:29</td>
+                <td>#0: *2189723 access forbidden by rule</td>
+                <td><a href="https://164.92.181.126" target="_blank">164.92.181.126</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /solr/admin/info/system HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:31</td>
+                <td>#0: *2189731 access forbidden by rule</td>
+                <td><a href="https://164.92.181.126" target="_blank">164.92.181.126</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /solr/admin/cores?action=STATUS&wt=json HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:24:31</td>
+                <td>#0: *2189731 access forbidden by rule</td>
+                <td><a href="https://164.92.181.126" target="_blank">164.92.181.126</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /solr/admin/cores?action=STATUS&wt=json HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:39:44</td>
+                <td>#0: *2191561 access forbidden by rule</td>
+                <td><a href="https://196.251.117.9" target="_blank">196.251.117.9</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 20:39:44</td>
+                <td>#0: *2191561 access forbidden by rule</td>
+                <td><a href="https://196.251.117.9" target="_blank">196.251.117.9</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.env HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:33:42</td>
+                <td>#0: *2205257 access forbidden by rule</td>
+                <td><a href="https://64.62.197.22" target="_blank">64.62.197.22</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:33:42</td>
+                <td>#0: *2205257 access forbidden by rule</td>
+                <td><a href="https://64.62.197.22" target="_blank">64.62.197.22</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:44:16</td>
+                <td>#0: *2206528 access forbidden by rule</td>
+                <td><a href="https://64.62.197.26" target="_blank">64.62.197.26</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.git/config HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 22:44:16</td>
+                <td>#0: *2206528 access forbidden by rule</td>
+                <td><a href="https://64.62.197.26" target="_blank">64.62.197.26</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /.git/config HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:52:24</td>
+                <td>#0: *2215223 access forbidden by rule</td>
+                <td><a href="https://107.174.224.18" target="_blank">107.174.224.18</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 23:52:24</td>
+                <td>#0: *2215223 access forbidden by rule</td>
+                <td><a href="https://107.174.224.18" target="_blank">107.174.224.18</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1", host: "112.175.152.231</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/17 01:28:50</td>
+                <td>#0: *2226801 access forbidden by rule</td>
+                <td><a href="https://13.86.104.42" target="_blank">13.86.104.42</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/17 01:28:50</td>
+                <td>#0: *2226801 access forbidden by rule</td>
+                <td><a href="https://13.86.104.42" target="_blank">13.86.104.42</a></td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET / HTTP/1.1</td>
+                <td>112.175.152.231</td>
+                <td></td>
+            </tr>
+            
+        </table>
+        
+        <h3>warn:Upstream Response Buffered</h3>
+        <input type="text" class="error-detail-search" data-table-id="error-detail-table-2" placeholder="Search in this error type..." style="margin-bottom:12px;width:320px;padding:8px 12px;border:1px solid #90caf9;border-radius:4px;font-size:1rem;">
+        <table id="error-detail-table-2">
+            
+            <colgroup>
+                <col style="width:16%">
+                <col style="width:16%">
+                <col style="width:8%">
+                <col style="width:8%">
+                <col class="request-col" style="width:16%">
+                <col style="width:6%">
+                <col style="width:30%">
+            </colgroup>
+            
+            <tr>
+                <th>Timestamp</th>
+                <th>Message</th>
+                <th>Client IP</th>
+                <th>Server</th>
+                <th class="request-col">Request</th>
+                <th>Host</th>
+                <th>Solution</thg>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 09:23:18</td>
+                <td>#0: *2101932 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/7/01/0000000017 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls HTTP/1.1", upstream: "http://10.10.6.21:9081/upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls", host: "nginx.test.com</td>
+                <td>None</td>
+                <td>Upstream Response Buffered in the Nginx error log is not typically an error message. It's usually a debug-level log message indicating that Nginx has finished reading the response from an upstream server and has buffered it in memory or on disk before sending it to the client. This message appears when Nginx's buffering is enabled and actively being used.
+Detailed Explanation: When Nginx acts as a reverse proxy (proxy_pass) or FastCGI client (fastcgi_pass), it receives the response from the upstream server. By default, Nginx buffers this response. This means Nginx reads the entire response (or a significant portion of it) from the upstream and stores it in internal buffers (in memory or temporary files on disk) before it starts sending the response to the client. ...</td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:43:22</td>
+                <td>#0: *2112944 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/8/01/0000000018 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls HTTP/1.1", upstream: "http://10.10.6.21:9081/upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls", host: "nginx.test.com</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 10:47:36</td>
+                <td>#0: *2113529 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/9/01/0000000019 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls HTTP/1.1", upstream: "http://10.10.6.21:9081/upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls", host: "nginx.test.com</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:37:49</td>
+                <td>#0: *2167685 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/0/02/0000000020 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls HTTP/1.1", upstream: "http://10.10.6.21:9081/upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls", host: "nginx.test.com</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 17:50:36</td>
+                <td>#0: *2170123 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/1/02/0000000021 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>nginx.test.com</td>
+                <td class="request-col">GET /upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls HTTP/1.1", upstream: "http://10.10.6.21:9081/upload/webexport/20250616/%EB%A7%A4%EC%9E%85%EA%B1%B0%EB%9E%98%EB%82%B4%EC%97%AD_0.xls", host: "nginx.test.com</td>
+                <td>None</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2025/06/16 18:00:01</td>
+                <td>#0: *2171276 an upstream response is buffered to a temporary file /us/local/nginx/proxy_temp/2/02/0000000022 while reading upstream</td>
+                <td>13.124.59.143</td>
+                <td>tnginx.test.com</td>
+                <td class="request-col">GET /static/global/js/main/bootstrap.bundle.min.js.map HTTP/1.1", upstream: "http://10.10.6.100:19081/static/global/js/main/bootstrap.bundle.min.js.map</td>
+                <td>tnginx.test.com</td>
+                <td></td>
+            </tr>
+            
+        </table>
+        
+        </div>
+        <script>
+            var chartData1 = {"data":[{"marker":{"color":["red","red","orange"]},"orientation":"h","x":[60,168,6],"y":["error:SSL Certificate Error","error:Access Forbidden","warn:Upstream Response Buffered"],"type":"bar"}],"layout":{"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}}}};
+            Plotly.newPlot('chart1', chartData1.data, chartData1.layout);
+
+            // 시간에 따른 로그레벨별 분포(점)
+            var chartData2 = {"data":[{"marker":{"color":"red","line":{"color":"black","width":1},"size":[40,24,24,12,40,24,12,12,40,40,12,12,24,12,12,24,24,36,24,24,36,12,12,24,24,12,12,40,12,12,40,24,24,24,12,24,24],"sizemin":8,"sizemode":"diameter","sizeref":1},"mode":"markers","name":"error","showlegend":true,"x":["2025-06-16 03:39","2025-06-16 04:40","2025-06-16 07:32","2025-06-16 07:41","2025-06-16 07:42","2025-06-16 07:58","2025-06-16 08:11","2025-06-16 08:31","2025-06-16 10:41","2025-06-16 10:42","2025-06-16 10:46","2025-06-16 10:51","2025-06-16 11:14","2025-06-16 12:31","2025-06-16 12:35","2025-06-16 12:51","2025-06-16 13:11","2025-06-16 13:38","2025-06-16 14:00","2025-06-16 14:29","2025-06-16 17:00","2025-06-16 17:01","2025-06-16 17:37","2025-06-16 18:00","2025-06-16 18:06","2025-06-16 19:01","2025-06-16 19:13","2025-06-16 19:28","2025-06-16 19:29","2025-06-16 19:40","2025-06-16 20:24","2025-06-16 20:39","2025-06-16 22:33","2025-06-16 22:44","2025-06-16 23:09","2025-06-16 23:52","2025-06-17 01:28"],"y":["error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error","error"],"type":"scatter"},{"marker":{"color":"orange","line":{"color":"black","width":1},"size":[8,8,8,8,8,8],"sizemin":8,"sizemode":"diameter","sizeref":1},"mode":"markers","name":"warn","showlegend":true,"x":["2025-06-16 09:23","2025-06-16 10:43","2025-06-16 10:47","2025-06-16 17:37","2025-06-16 17:50","2025-06-16 18:00"],"y":["warn","warn","warn","warn","warn","warn"],"type":"scatter"}],"layout":{"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}}}};
+            Plotly.newPlot('chart2', chartData2.data, chartData2.layout);
+
+            // 지도 차트 데이터
+            var mapChartData = {"data":[{"locationmode":"country names","locations":["China","United States","Canada","Russia","Singapore","South Korea","The Netherlands","Germany","United States","United States","United States","United States","Seychelles","South Korea","United States","United States","Germany","Belgium","United States","United Kingdom","Germany","United States","United States","United States","United States"],"marker":{"color":["red","orange","yellow","green","blue","indigo","violet","red","orange","yellow","green"],"line":{"color":"#1976d2","width":0.5},"size":[40,40,40,40,36,36,24,24,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12]},"name":"Known Country","text":["China: 86","United States: 12","Canada: 12","Russia: 10","Singapore: 6","South Korea: 6","The Netherlands: 4","Germany: 4","United States: 2","United States: 2","United States: 2","United States: 2","Seychelles: 2","South Korea: 2","United States: 2","United States: 2","Germany: 2","Belgium: 2","United States: 2","United Kingdom: 2","Germany: 2","United States: 2","United States: 2","United States: 2","United States: 2"],"type":"scattergeo"}],"layout":{"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}}}};
+            Plotly.newPlot('map-chart', mapChartData.data, mapChartData.layout);
+
+            // Client IP Statistics 검색 기능
+            document.addEventListener('DOMContentLoaded', function() {
+                var input = document.getElementById('client-ip-search');
+                var table = document.getElementById('client-ip-table');
+                input.addEventListener('keyup', function() {
+                    var filter = input.value.toLowerCase();
+                    var trs = table.getElementsByTagName('tr');
+                    for (var i = 1; i < trs.length; i++) {
+                        var tds = trs[i].getElementsByTagName('td');
+                        var rowText = '';
+                        for (var j = 0; j < tds.length; j++) {
+                            rowText += tds[j].textContent.toLowerCase() + ' ';
+                        }
+                        trs[i].style.display = rowText.indexOf(filter) > -1 ? '' : 'none';
+                    }
+                });
+
+                // Top Error Types 검색 기능
+                var topErrorInput = document.getElementById('top-error-search');
+                var topErrorTable = document.getElementById('top-error-table');
+                topErrorInput.addEventListener('keyup', function() {
+                    var filter = topErrorInput.value.toLowerCase();
+                    var trs = topErrorTable.getElementsByTagName('tr');
+                    for (var i = 1; i < trs.length; i++) {
+                        var tds = trs[i].getElementsByTagName('td');
+                        var rowText = '';
+                        for (var j = 0; j < tds.length; j++) {
+                            rowText += tds[j].textContent.toLowerCase() + ' ';
+                        }
+                        trs[i].style.display = rowText.indexOf(filter) > -1 ? '' : 'none';
+                    }
+                });
+
+                // Error Details 검색 기능
+                var searchInputs = document.querySelectorAll('.error-detail-search');
+                searchInputs.forEach(function(searchInput) {
+                    var tableId = searchInput.getAttribute('data-table-id');
+                    var table = document.getElementById(tableId);
+                    searchInput.addEventListener('keyup', function() {
+                        var filter = searchInput.value.toLowerCase();
+                        var trs = table.getElementsByTagName('tr');
+                        for (var i = 1; i < trs.length; i++) {
+                            var tds = trs[i].getElementsByTagName('td');
+                            var rowText = '';
+                            for (var j = 0; j < tds.length; j++) {
+                                rowText += tds[j].textContent.toLowerCase() + ' ';
+                            }
+                            trs[i].style.display = rowText.indexOf(filter) > -1 ? '' : 'none';
+                        }
+                    });
+                });
+            });
+        </script>
+        <footer>
+            <p>Support by Weblogs Co. Ltd. 2025.</p>
+        </footer>
+    </body>
+    </html>
+    
