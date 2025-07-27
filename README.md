@@ -216,10 +216,10 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## 🔗 Links
 
-- **Live Demo**: [nginxlogs.com](https://nginxlogs.com)
-- **Desktop Interface**: [nginxlogs.com/desktop.html](https://nginxlogs.com/desktop.html)
-- **How-to Guide**: [nginxlogs.com/howto.html](https://nginxlogs.com/howto.html)
-- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://nginxlogs.com/qna/paypal.html)
+- **Live Demo**: [nginxlogs.com](https://www.nginxlogs.com)
+- **Desktop Interface**: [nginxlogs.com/desktop.html](https://www.nginxlogs.com/desktop.html)
+- **How-to Guide**: [nginxlogs.com/howto.html](https://www.nginxlogs.com/howto.html)
+- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://www.nginxlogs.com/qna/paypal.html)
 
 ---
 
@@ -227,7 +227,7 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 **🕹️ Ready to start your NGINX analysis adventure? 🕹️**
 
-[**► ENTER THE ARCADE ◄**](https://nginxlogs.com/desktop.html)
+[**► ENTER THE ARCADE ◄**](https://www.nginxlogs.com/desktop.html)
 
 *Experience professional log analysis like never before!*
 
@@ -251,10 +251,10 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## 🔗 Links
 
-- **Live Demo**: [nginxlogs.com](https://nginxlogs.com)
-- **Desktop Interface**: [nginxlogs.com/desktop.html](https://nginxlogs.com/desktop.html)
-- **How-to Guide**: [nginxlogs.com/howto.html](https://nginxlogs.com/howto.html)
-- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://nginxlogs.com/qna/paypal.html)
+- **Live Demo**: [nginxlogs.com](https://www.nginxlogs.com)
+- **Desktop Interface**: [nginxlogs.com/desktop.html](https://www.nginxlogs.com/desktop.html)
+- **How-to Guide**: [nginxlogs.com/howto.html](https://www,nginxlogs.com/howto.html)
+- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://www.nginxlogs.com/qna/paypal.html)
 
 ---
 
@@ -262,10 +262,10 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 **🕹️ Ready to start your NGINX analysis adventure? 🕹️**
 
-[**► ENTER THE ARCADE ◄**](https://nginxlogs.com/desktop.html)
+[**► ENTER THE ARCADE ◄**](https://www.nginxlogs.com/desktop.html)
 
 *Experience professional log analysis like never before!*
 
-**© 2025 Weblogs Arcade Team - Where Technology Meets Gaming**
+**© 2025 Weblogs Arcade Team - support by coinswallet co. ltd.**
 
 </div>
