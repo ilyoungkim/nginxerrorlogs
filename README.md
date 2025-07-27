@@ -216,53 +216,19 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## 🔗 Links
 
-- **Live Demo**: [nginxlogs.com](https://www.nginxlogs.com)
-- **Desktop Interface**: [nginxlogs.com/desktop.html](https://www.nginxlogs.com/desktop.html)
-- **How-to Guide**: [nginxlogs.com/howto.html](https://www.nginxlogs.com/howto.html)
-- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://www.nginxlogs.com/qna/paypal.html)
+- **Live Demo**: [www.nginxlogs.com](https://www.nginxlogs.com)
+- **Desktop Interface**: [www.nginxlogs.com/desktop.html](https://www.nginxlogs.com/desktop.html)
+- **How-to Guide**: [www.nginxlogs.com/howto.html](https://www.nginxlogs.com/howto.html)
+- **PayPal Guide**: [www.nginxlogs.com/qna/paypal.html](https://www.nginxlogs.com/qna/paypal.html)
 
 ---
+
 
 <div align="center">
 
 **🕹️ Ready to start your NGINX analysis adventure? 🕹️**
 
-[**► ENTER THE ARCADE ◄**](https://www.nginxlogs.com/desktop.html)
-
-*Experience professional log analysis like never before!*
-
-**© 2025 Weblogs Arcade Team - Where Technology Meets Gaming**
-
-</div>
-- 📱 Better mobile responsiveness
-- 🔊 Added Web Audio API sound effects
-- 📊 Enhanced report visualizations
-
-## 🏆 Team
-
-**Weblogs Arcade Team 2025**
-- Passionate developers combining retro gaming aesthetics with modern web technology
-- Dedicated to providing professional log analysis with an engaging user experience
-- Committed to security, privacy, and customer satisfaction
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- **Live Demo**: [nginxlogs.com](https://www.nginxlogs.com)
-- **Desktop Interface**: [nginxlogs.com/desktop.html](https://www.nginxlogs.com/desktop.html)
-- **How-to Guide**: [nginxlogs.com/howto.html](https://www,nginxlogs.com/howto.html)
-- **PayPal Guide**: [nginxlogs.com/qna/paypal.html](https://www.nginxlogs.com/qna/paypal.html)
-
----
-
-<div align="center">
-
-**🕹️ Ready to start your NGINX analysis adventure? 🕹️**
-
-[**► ENTER THE ARCADE ◄**](https://www.nginxlogs.com/desktop.html)
+[**► ENTER THE ARCADE FOR LOG ANALYSIS◄**](https://www.nginxlogs.com/desktop.html)
 
 *Experience professional log analysis like never before!*
 
